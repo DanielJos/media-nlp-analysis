@@ -7,10 +7,22 @@ class LDA:
   _bowCorpus = None
   _trainCount = 0
   
-  def __init__(self, documents: list[Document], numTopics: int, passes: int, workers: int = 4):
+  def __init__(self, documents: list[Document] = None, numTopics: int = None, passes: int = None, workers: int = 4, loadFromPath: str = None):
     """
     LDAs the corpus
     """
+    
+    if loadFromPath:
+      self._load(loadFromPath)
+      return
+    
+    # If not loading from path, check that all params are provided
+    if not documents:
+      raise Exception("No documents provided")
+    if not numTopics:
+      raise Exception("No numTopics provided")
+    if not passes:
+      raise Exception("No passes provided")
     
     # Generate a dictionary
     self._dictionary = gensim.corpora.Dictionary([document.tokens for document in documents])
@@ -24,6 +36,24 @@ class LDA:
     self._ldaModel = ldaModel
         
   # Mutators
+  
+  def save(self, path: str):
+    """
+    Saves the LDA model
+    """
+    
+    self._ldaModel.save(path + ".model")
+    self._dictionary.save(path + ".dict")
+    gensim.corpora.MmCorpus.serialize(path + ".bow", self._bowCorpus)
+    
+  def _load(self, path: str):
+    """
+    Loads the LDA model
+    """
+    
+    self._ldaModel = gensim.models.LdaMulticore.load(path + ".model")
+    self._dictionary = gensim.corpora.Dictionary.load(path + ".dict")
+    self._bowCorpus = gensim.corpora.MmCorpus(path + ".bow")
     
   def resetLDA(self):
     """
