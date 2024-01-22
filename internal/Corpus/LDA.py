@@ -1,5 +1,5 @@
 import gensim
-from Document import Document
+from .Document import Document
 
 class LDA:
   _ldaModel: gensim.models.LdaMulticore
@@ -78,6 +78,23 @@ class LDA:
     """
     # Doc tokens to BOW
     doc_bow = self._dictionary.doc2bow(document.tokens)
+
+    topic_probabilities = self._ldaModel.get_document_topics(doc_bow)
+
+    # Sort by prob
+    if topic_probabilities:
+      most_probable_topic = sorted(topic_probabilities, key=lambda x: x[1], reverse=True)[0][0]
+      return most_probable_topic
+    else:
+      return None
+    
+  def getTopicForTokens(self, tokens: list[str]) -> int:
+    """
+    Returns the most probable topic for a list of tokens
+    """
+    
+    # Doc tokens to BOW
+    doc_bow = self._dictionary.doc2bow(tokens)
 
     topic_probabilities = self._ldaModel.get_document_topics(doc_bow)
 
