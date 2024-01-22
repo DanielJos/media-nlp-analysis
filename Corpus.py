@@ -1,31 +1,45 @@
 import datetime
 import pandas as pd
 
-from transformers import TFBertForSequenceClassification, BertTokenizerFast
+# from transformers import TFBertForSequenceClassification, BertTokenizerFast
 
 from Document import Document
 from LDA import LDA
-from BERT import BERT
+from SA import SA
 
 class Corpus:
   
   # List of documents with class Document
   documents: list[Document] = []
-  LDA: LDA = None
-  BERT: BERT = None
-  
+  _LDA: _LDA = None
+  _SA: _SA = None
   
   def __init__(self, documents: list(tuple[str, str, datetime.datetime])):
     self.documents = [Document(raw=document[0], source=document[1], date=document[2]) for document in documents]
-    self.LDA = LDA()
-    self.BERT = BERT()
+    self._SA = SA("mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis")
+
+  def initLDA(self, numTopics: int = 5, passes: int = 10, workers: int = 4):
+    """
+    Initialises the LDA model
+    """
     
-  def trainLDA(self, numTopics: int, passes: int, workers: int = 4):
+    self._LDA = LDA(documents=self.documents, numTopics=numTopics, passes=passes, workers=workers)
+    self._LDA.setTopicForDocuments(self.documents)
+    
+  def trainLDA(self, passes: int, workers: int = 4):
     """
     LDAs the corpus
     """
     
-    self.LDA.trainLDA(numTopics=numTopics, documents=self.documents, passes=passes, workers=workers)
+    self._LDA.trainLDAMore()
+    self._LDA.setTopicForDocuments(self.documents)
+    
+  def assessLDA(self) -> tuple[float, float]:
+    """
+    Returns the perplexity and coherence of the LDA model
+    """
+    
+    return self._LDA.getPerplexity(), self._LDA.getCoherence(self.documents)
       
   def toDataframe (self) -> pd.DataFrame:
     """
@@ -39,4 +53,4 @@ class Corpus:
     Returns the sentiment for a document
     """
     
-    return self.BERT.getPrediction(text)
+    return self._SA.getPrediction(text)

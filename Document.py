@@ -5,13 +5,13 @@ import string
 import datetime
 
 class Document:
-  raw: str
-  tokens: list[str]
+  raw: str = None
+  tokens: list[str] = None
   
   sentiment: int = None
-  topic: int
-  date: datetime.datetime
-  source: str
+  topic: int = None
+  date: datetime.datetime = None
+  source: str = None
 
   def __init__(self, raw: str, source: str, date: datetime.datetime):
     self.raw = raw
